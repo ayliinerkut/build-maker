@@ -1,0 +1,169 @@
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Riot Games Staj Başvurusu - Yapı Tavsiyecisi</title>
+    <!-- Tailwind CSS kütüphanesini yüklüyoruz. Bu, sayfayı hızlıca ve güzelce stilize etmemizi sağlar. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 'Inter' fontunu kullanıyoruz. */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f7f7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        /* Riot Games temasına yakın, hafif koyu bir arkaplan ve gölge için özel stil */
+        .card {
+            background: linear-gradient(135deg, #1f2937, #111827); /* Koyu gri/mavi gradient */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        /* Buton stili */
+        #recommendButton {
+            transition: all 0.2s;
+        }
+        #recommendButton:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(250, 190, 80, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Ana Kapsayıcı (Ortalanmış Kart) -->
+    <div class="card p-8 md:p-10 rounded-xl max-w-lg w-full text-white">
+
+        <!-- Başlık Bölümü -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-extrabold text-[#facc15] tracking-tight">
+                Şampiyon Yapı Tavsiyecisi
+            </h1>
+            <p class="text-sm text-gray-400 mt-2">
+                Basit Bir Rol Bazlı Eşya Öneri Sistemi
+            </p>
+        </header>
+
+        <!-- Form ve Seçim Alanı -->
+        <section class="space-y-6">
+            <label for="roleSelect" class="block text-lg font-medium text-gray-300 mb-2">
+                1. Şampiyonun Rolünü Seçin:
+            </label>
+
+            <!-- Rol Seçimi Dropdown Menüsü -->
+            <select id="roleSelect"
+                    class="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 focus:ring-[#facc15] focus:border-[#facc15] text-white">
+                <option value="none" disabled selected>-- Bir Rol Seçin --</option>
+                <option value="tank">Tank (Dayanıklılık)</option>
+                <option value="marksman">Nişancı (Sürekli Hasar)</option>
+                <option value="mage">Büyücü (Yüksek Büyü Hasarı)</option>
+                <option value="assassin">Suikastçi (Ani Fiziksel Hasar)</option>
+            </select>
+
+            <!-- Tavsiye Al Butonu -->
+            <button id="recommendButton"
+                    class="w-full py-3 mt-4 text-lg font-semibold rounded-lg bg-[#facc15] text-gray-900 hover:bg-[#ffdf7f]">
+                2. Tavsiye Al!
+            </button>
+        </section>
+
+        <!-- Sonuç Alanı (Başlangıçta Gizli) -->
+        <div id="results" class="mt-10 pt-6 border-t border-gray-700 hidden">
+            <h2 class="text-xl font-bold mb-4 text-[#facc15]">
+                Önerilen Çekirdek Eşyalar:
+            </h2>
+            <!-- Tavsiyeler buraya yerleştirilecek -->
+            <ul id="recommendationList" class="space-y-3 text-gray-200">
+                <!-- Eşyalar JavaScript ile eklenecek -->
+            </ul>
+            <p id="systemMessage" class="text-sm text-red-400 mt-4 hidden">
+                Lütfen bir rol seçimi yapın.
+            </p>
+        </div>
+    </div>
+
+    <!--
+        JAVASCRIPT BÖLÜMÜ (UYGULAMANIN MANTIĞI)
+    -->
+    <script>
+        // 1. Gerekli HTML Elementlerini (Düğmeleri, Alanları) alıyoruz.
+        const roleSelect = document.getElementById('roleSelect');
+        const recommendButton = document.getElementById('recommendButton');
+        const resultsDiv = document.getElementById('results');
+        const recommendationList = document.getElementById('recommendationList');
+        const systemMessage = document.getElementById('systemMessage');
+
+        // 2. Tavsiye Veri Setimizi Tanımlıyoruz.
+        // Bu, sisteminize eklediğiniz basit bir veritabanı gibi düşünebilirsiniz.
+        const recommendations = {
+            'tank': [
+                "1. Eşya: Terminus Plakası (Zırh ve Büyü Direnci)",
+                "2. Eşya: Kalkan Mührü (Can Artışı ve Kalkan)",
+                "3. Eşya: İrade Gücü (Pasif Can Yenileme)"
+            ],
+            'marksman': [
+                "1. Eşya: Hız ve Saldırı Gücü Çizmesi",
+                "2. Eşya: Sonsuzluk Kılıcı (Kritik Vuruş Şansı)",
+                "3. Eşya: Rüzgarın Esintisi (Hız ve Kaçınma)"
+            ],
+            'mage': [
+                "1. Eşya: Büyücü Ayakkabısı (Büyü Penetrasyonu)",
+                "2. Eşya: Rabadon'un Şapkası (Yüksek Yetenek Gücü)",
+                "3. Eşya: Liandry'nin Eziyeti (Zamanla Hasar)"
+            ],
+            'assassin': [
+                "1. Eşya: Gölge Bıçağı (Zırh Deşme ve Görünmezlik)",
+                "2. Eşya: Gece Tırpanı (Ani Hasar Patlaması)",
+                "3. Eşya: Ölümün Fermanı (Hareket Hızı ve Hasar)"
+            ],
+            'none': [] // Eğer hiçbir şey seçilmezse boş kalır
+        };
+
+        // 3. Butona tıklandığında çalışacak ana fonksiyon.
+        recommendButton.addEventListener('click', function() {
+            // Seçilen rolün değerini alıyoruz (örneğin 'tank' veya 'mage').
+            const selectedRole = roleSelect.value;
+
+            // Önceki uyarıları ve sonuçları temizle
+            resultsDiv.classList.add('hidden');
+            recommendationList.innerHTML = '';
+            systemMessage.classList.add('hidden');
+
+            // Kontrol: Eğer hiçbir rol seçilmemişse uyarı ver.
+            if (selectedRole === 'none') {
+                systemMessage.textContent = 'Lütfen tavsiye almak için yukarıdan bir şampiyon rolü seçin.';
+                systemMessage.classList.remove('hidden');
+                resultsDiv.classList.remove('hidden');
+                return; // Fonksiyonu burada durdur.
+            }
+
+            // 4. Tavsiye Mantığı (The Core Logic)
+            // Seçilen role ait eşya listesini al.
+            const itemsToRecommend = recommendations[selectedRole];
+
+            // 5. Sonuçları Ekrana Yazdırma
+            if (itemsToRecommend && itemsToRecommend.length > 0) {
+                // Her eşya için bir liste öğesi (<li>) oluştur ve listeye ekle.
+                itemsToRecommend.forEach(item => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = item;
+                    // Tailwind ile liste öğelerine stil ver
+                    listItem.classList.add('p-2', 'bg-gray-800', 'rounded', 'border-l-4', 'border-[#facc15]');
+                    recommendationList.appendChild(listItem);
+                });
+
+                // Sonuç alanını görünür yap.
+                resultsDiv.classList.remove('hidden');
+            } else {
+                // Eğer bir sebepten tavsiye bulunamazsa
+                systemMessage.textContent = 'Bu rol için bir tavsiye bulunamadı. Lütfen teknik ekibe danışın.';
+                systemMessage.classList.remove('hidden');
+                resultsDiv.classList.remove('hidden');
+            }
+        });
+
+    </script>
+</body>
+</html>
